@@ -19,7 +19,13 @@ const app = express();
 /* ── Middleware ── */
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname)));   // serve all static assets
+
+// Serve static files — works locally (__dirname) and on Vercel (process.cwd())
+const staticDir = path.join(__dirname).includes('.vercel')
+  ? process.cwd()
+  : __dirname;
+app.use(express.static(staticDir));
+
 
 /* ════════════════════════════════════
    MongoDB – Lead Schema
