@@ -11,13 +11,11 @@
 require('dotenv').config();
 const express   = require('express');
 const mongoose  = require('mongoose');
-const cors      = require('cors');
 const path      = require('path');
 
 const app = express();
 
 /* ── Middleware ── */
-app.use(cors());
 app.use(express.json());
 
 // Serve static files — works locally (__dirname) and on Vercel (process.cwd())
@@ -51,13 +49,36 @@ const leadSchema = new mongoose.Schema({
 const Lead = mongoose.model('Lead', leadSchema);
 
 /* ════════════════════════════════════
+   MongoDB – lazy connection (works in serverless + local)
+════════════════════════════════════ */
+let isConnected = false;
+
+async function connectDB() {
+  if (isConnected) return;
+  await mongoose.connect(process.env.MONGO_URI);
+  isConnected = true;
+}
+
+/* ════════════════════════════════════
    Admin auth middleware
 ════════════════════════════════════ */
 function adminAuth(req, res, next) {
-  const pw = req.headers['x-admin-password'] || req.query.pw;
+  const pw = req.headers['x-admin-password'];
   if (pw === process.env.ADMIN_PASSWORD) return next();
   return res.status(401).json({ error: 'Unauthorized' });
 }
+
+// Run connectDB before API requests so cold starts are connected
+// before route handlers call Mongoose.
+app.use('/api', async (_req, _res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('MongoDB connection error:', err.message);
+    next(err);
+  }
+});
 
 /* ════════════════════════════════════
    API Routes
@@ -141,28 +162,6 @@ app.get('/', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/admin', (_req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 
 /* ════════════════════════════════════
-   MongoDB – lazy connection (works in serverless + local)
-════════════════════════════════════ */
-let isConnected = false;
-
-async function connectDB() {
-  if (isConnected) return;
-  await mongoose.connect(process.env.MONGO_URI);
-  isConnected = true;
-}
-
-// Run connectDB before every request so cold-starts work on Vercel
-app.use(async (_req, _res, next) => {
-  try {
-    await connectDB();
-    next();
-  } catch (err) {
-    console.error('MongoDB connection error:', err.message);
-    next(err);
-  }
-});
-
-/* ════════════════════════════════════
    Local dev  →  start HTTP server
    Vercel     →  export the app
 ════════════════════════════════════ */
@@ -181,4 +180,3 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 module.exports = app;
-

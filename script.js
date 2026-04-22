@@ -229,7 +229,9 @@ function spinAge(delta) {
   val = Math.min(120, Math.max(62, val + delta));
   input.value = val;
 }
-window.spinAge = spinAge; // expose globally for onclick
+document.querySelectorAll('[data-age-step]').forEach(btn => {
+  btn.addEventListener('click', () => spinAge(Number(btn.dataset.ageStep)));
+});
 
 /* ── FORMAT CURRENCY INPUTS ── */
 ['homeValue', 'mortgageBalance'].forEach(id => {
@@ -243,95 +245,6 @@ window.spinAge = spinAge; // expose globally for onclick
     input.value = input.value.replace(/,/g, '');
   });
 });
-
-/* ── CALCULATOR LOGIC ── */
-function calculateEstimate() {
-  const homeValueRaw   = document.getElementById('homeValue').value.replace(/,/g, '');
-  const ageVal         = parseInt(document.getElementById('borrowerAge').value, 10);
-  const mortgageRaw    = document.getElementById('mortgageBalance').value.replace(/,/g, '') || '0';
-
-  const homeValue      = parseFloat(homeValueRaw);
-  const mortgageBalance = parseFloat(mortgageRaw);
-  const resultEl       = document.getElementById('calcResult');
-  const amountEl       = document.getElementById('resultAmount');
-
-  if (isNaN(homeValue) || homeValue <= 0) {
-    shakeField('homeValue');
-    return;
-  }
-  if (isNaN(ageVal) || ageVal < 62) {
-    shakeField('borrowerAge');
-    return;
-  }
-
-  // HECM approximation: PLF based on age (simplified)
-  // PLF table rough approximation: 62 → 0.40, 70 → 0.47, 80 → 0.55, 90+ → 0.63
-  const ageFactor = Math.min(0.63, 0.40 + ((ageVal - 62) / 30) * 0.23);
-  // HUD lending limit 2024: $1,149,825
-  const lendingLimit = 1_149_825;
-  const effectiveValue = Math.min(homeValue, lendingLimit);
-  const grossProceeds  = effectiveValue * ageFactor;
-  const netProceeds    = Math.max(0, grossProceeds - mortgageBalance);
-
-  amountEl.textContent = '$—';
-  resultEl.classList.add('visible');
-  resultEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-  // Animate the number
-  const duration = 1200;
-  const start = performance.now();
-  const step = (now) => {
-    const progress = Math.min((now - start) / duration, 1);
-    const eased = 1 - Math.pow(1 - progress, 4);
-    amountEl.textContent = '$' + Math.floor(eased * netProceeds).toLocaleString();
-    if (progress < 1) requestAnimationFrame(step);
-    else amountEl.textContent = '$' + Math.round(netProceeds).toLocaleString();
-  };
-  requestAnimationFrame(step);
-}
-window.calculateEstimate = calculateEstimate;
-
-function shakeField(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.style.borderColor = '#e53e3e';
-  el.style.animation = 'shake .4s ease';
-  setTimeout(() => {
-    el.style.animation = '';
-    el.style.borderColor = '';
-  }, 600);
-}
-
-// Add shake keyframes dynamically
-const shakeStyle = document.createElement('style');
-shakeStyle.textContent = `
-  @keyframes shake {
-    0%,100% { transform: translateX(0); }
-    20%      { transform: translateX(-6px); }
-    40%      { transform: translateX(6px); }
-    60%      { transform: translateX(-4px); }
-    80%      { transform: translateX(4px); }
-  }
-`;
-document.head.appendChild(shakeStyle);
-
-/* ── NEWSLETTER ── */
-function subscribeNewsletter(e) {
-  e.preventDefault();
-  const btn   = document.getElementById('newsletterBtn');
-  const input = document.getElementById('newsletterEmail');
-  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>';
-  btn.style.background = '#4CAF50';
-  input.value = '';
-  input.placeholder = 'You\'re subscribed!';
-  setTimeout(() => {
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>';
-    btn.style.background = '';
-    input.placeholder = 'Email address';
-  }, 3500);
-  return false;
-}
-window.subscribeNewsletter = subscribeNewsletter;
 
 /* ════════════════════════════════════
    WIZARD MODAL
@@ -360,7 +273,7 @@ window.subscribeNewsletter = subscribeNewsletter;
   /* Attach opener to every CTA button */
   const ctaIds = [
     'heroEstimateBtn', 'heroCallBtn', 'aboutEstimateBtn',
-    'calcSubmitBtn', 'resultContactBtn'
+    'calcSubmitBtn'
   ];
   ctaIds.forEach(id => {
     const el = document.getElementById(id);
@@ -373,6 +286,10 @@ window.subscribeNewsletter = subscribeNewsletter;
   // Also catch any remaining .btn-primary or .btn-xl that link to #calculator / #about
   document.querySelectorAll('a.btn[href="#calculator"], a.btn[href="#about"]').forEach(a => {
     a.addEventListener('click', e => { e.preventDefault(); openWizard(); });
+  });
+  document.getElementById('calcForm')?.addEventListener('submit', e => {
+    e.preventDefault();
+    openWizard();
   });
 
   closeBtn.addEventListener('click', closeWizard);
