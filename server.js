@@ -14,8 +14,7 @@ const mongoose  = require('mongoose');
 const cors      = require('cors');
 const path      = require('path');
 
-const app  = express();
-const PORT = process.env.PORT || 3000;
+const app = express();
 
 /* ── Middleware ── */
 app.use(cors());
@@ -136,14 +135,44 @@ app.get('/', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/admin', (_req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 
 /* ════════════════════════════════════
-   Connect & Start
+   MongoDB – lazy connection (works in serverless + local)
 ════════════════════════════════════ */
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log('✅  MongoDB connected');
-    app.listen(PORT, () => console.log(`🚀  Server running → http://localhost:${PORT}`));
-  })
-  .catch(err => {
-    console.error('❌  MongoDB connection failed:', err.message);
-    process.exit(1);
-  });
+let isConnected = false;
+
+async function connectDB() {
+  if (isConnected) return;
+  await mongoose.connect(process.env.MONGO_URI);
+  isConnected = true;
+}
+
+// Run connectDB before every request so cold-starts work on Vercel
+app.use(async (_req, _res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    console.error('MongoDB connection error:', err.message);
+    next(err);
+  }
+});
+
+/* ════════════════════════════════════
+   Local dev  →  start HTTP server
+   Vercel     →  export the app
+════════════════════════════════════ */
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 3000;
+  connectDB()
+    .then(() => {
+      app.listen(PORT, () =>
+        console.log(`🚀  Server running → http://localhost:${PORT}`)
+      );
+    })
+    .catch(err => {
+      console.error('❌  MongoDB connection failed:', err.message);
+      process.exit(1);
+    });
+}
+
+module.exports = app;
+
