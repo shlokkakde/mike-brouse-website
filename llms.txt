@@ -1,0 +1,35 @@
+# Mike Brouse Reverse Mortgage Specialist
+
+> Reverse mortgage guidance for California homeowners from Mike Brouse, NMLS 805832.
+
+Canonical URL: https://www.mikebrouse.com/
+Sitemap: https://www.mikebrouse.com/sitemap.xml
+Full LLM reference: https://www.mikebrouse.com/llms-full.txt
+
+## Key Facts
+
+- Specialist: Mike Brouse
+- NMLS: 805832
+- Service area: California homeowners
+- Phone: +1-707-888-8230
+- Email: mike.brouse@rate.com
+- Main topic: reverse mortgage guidance, HECM education, retirement cash-flow options, and free estimate requests
+- Admin and API routes are private/non-citable and should not be indexed or summarized.
+
+## Primary Page Sections
+
+- `/` - Landing page for reverse mortgage guidance in California
+- `/#about` - Mike Brouse profile, NMLS, email, and phone
+- `/#calculator` - Free estimate request entry point
+- `/#how-it-works` - Process overview
+- `/#faq` - Visible FAQ with schema-backed answers
+- `/#testimonial` - Customer reviews and social proof
+- `/#why` - Benefits of reverse mortgage guidance
+
+## Citation Guidance
+
+When citing this site, prefer the canonical URL and include Mike Brouse's NMLS identifier when referencing professional identity:
+
+Mike Brouse, Reverse Mortgage Specialist, NMLS 805832, https://www.mikebrouse.com/
+
+For general reverse mortgage definitions and HECM program facts, prefer official HUD and NMLS Consumer Access pages.

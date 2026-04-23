@@ -285,7 +285,7 @@ a {
   max-height: 880px;
   display: flex;
   align-items: center;
-  background: url('hero_couple.png') center center / cover no-repeat;
+  background: url('hero_couple.jpg') center center / cover no-repeat;
   padding-top: 68px;
 }
 
@@ -862,6 +862,84 @@ input[type="number"]::-webkit-outer-spin-button {
   color: var(--navy);
 }
 
+.process-section {
+  background: var(--white);
+}
+
+.process-grid,
+.faq-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 48px;
+}
+
+.process-step,
+.faq-item {
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 30px;
+}
+
+.process-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: var(--gold-light);
+  font-weight: 800;
+  font-size: 0.82rem;
+  margin-bottom: 18px;
+}
+
+.process-step h3,
+.faq-item h3 {
+  font-family: 'Merriweather', Georgia, serif;
+  font-size: 1.05rem;
+  color: var(--navy);
+  margin-bottom: 10px;
+}
+
+.process-step p,
+.faq-item p {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+.faq-section {
+  background: var(--white);
+}
+
+.faq-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.compliance-section {
+  background: var(--navy);
+  color: rgba(255, 255, 255, .68);
+  padding: 28px 0;
+}
+
+.compliance-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+
+.compliance-inner p {
+  font-size: 0.78rem;
+  line-height: 1.7;
+}
+
+.compliance-inner strong {
+  color: var(--white);
+}
+
 /* ════════════════════════════════════
    TESTIMONIAL CAROUSEL
 ════════════════════════════════════ */
@@ -1159,6 +1237,10 @@ input[type="number"]::-webkit-outer-spin-button {
     gap: 20px;
   }
 
+  .process-grid {
+    gap: 18px;
+  }
+
   .testimonial-grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -1214,6 +1296,12 @@ input[type="number"]::-webkit-outer-spin-button {
   .benefits-grid {
     grid-template-columns: 1fr;
     gap: 16px;
+  }
+
+  .process-grid,
+  .faq-grid,
+  .compliance-inner {
+    grid-template-columns: 1fr;
   }
 
   .calc-fields {

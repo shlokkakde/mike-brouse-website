@@ -22,6 +22,10 @@ app.use(express.json());
 const staticDir = path.join(__dirname).includes('.vercel')
   ? process.cwd()
   : __dirname;
+app.use('/admin.html', (_req, res, next) => {
+  res.set('X-Robots-Tag', 'noindex, nofollow');
+  next();
+});
 app.use(express.static(staticDir));
 
 
@@ -159,7 +163,10 @@ app.get('/api/stats', adminAuth, async (req, res) => {
    Page routes
 ════════════════════════════════════ */
 app.get('/', (_req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/admin', (_req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
+app.get('/admin', (_req, res) => {
+  res.set('X-Robots-Tag', 'noindex, nofollow');
+  res.sendFile(path.join(__dirname, 'admin.html'));
+});
 
 /* ════════════════════════════════════
    Local dev  →  start HTTP server
