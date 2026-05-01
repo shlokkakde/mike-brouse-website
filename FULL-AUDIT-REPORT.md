@@ -1,129 +1,58 @@
 # SEO Audit Report
 
 **Project:** Reverse mortgage landing page for Mike Brouse  
-**Scope:** Local repository audit of the public landing page, admin surface, crawl directives, schema, and AI-search readiness
+**Scope:** Live-domain SEO audit of `https://www.mikebrouse.com/` with local repo inspection where live fetches were blocked
 
 ## Overall Score
 
-**84 / 100 — Good**
+**25 / 100 — Critical**
 
-The site is in strong shape on the core SEO fundamentals: it has a clear canonical URL, valid JSON-LD, a single H1, robots and sitemap files, admin noindex protection, and a reasonably focused title/meta pair. The main issues are now more about GEO hygiene and repository cleanliness than basic discoverability.
+Score confidence: **Medium**
 
-## What Is Working Well
+The local repository has strong on-page SEO foundations, but the live site is currently the bottleneck. Generic browser fetches return `403` for the homepage and for key crawl files, which means search engines and AI systems may not be able to access the content that the repo is preparing.
 
-- The landing page has one clear primary H1 and a focused title/meta description.
-- `robots.txt` and `sitemap.xml` are present and publicly reachable.
-- The admin surface is protected with `noindex, nofollow` at both the HTML and header level.
-- FAQ schema matches the visible FAQ content.
-- JSON-LD parses successfully.
-- The hero image was converted from PNG to JPG, reducing weight.
-- The page includes `llms.txt` and `llms-full.txt`, which is good GEO/AEO groundwork.
+## Audit Summary
+
+### Top 3 Issues
+
+- The live homepage returns `403` to generic browser clients.
+- `llms.txt`, `llms-full.txt`, and `sitemap.xml` are not publicly fetchable in the live environment.
+- The live `robots.txt` is a Cloudflare-managed content-signals file and does not include a `Sitemap:` directive.
+
+### Top 3 Opportunities
+
+- Restore public `200` access to the homepage and crawl files.
+- Deploy the llms guidance files so AI systems can actually read them.
+- Pull backlink data from Google Search Console once crawl access is stable.
 
 ## Findings
 
-### 1) High: AI guidance files reference removed page sections
+| Area | Severity | Confidence | Finding | Evidence | Fix |
+|---|---|---:|---|---|---|
+| Technical SEO / Indexability | Critical | Confirmed | The live homepage is returning `403` to generic browser fetches, so the public page is not reliably accessible for crawl/render. | `Invoke-WebRequest` with a normal Chrome UA returned `403` for `https://www.mikebrouse.com/`; `web.open` on the root also failed. Googlebot/Bingbot-style requests were aborted by the connection. | Remove or relax the Cloudflare/WAF rule or challenge that is blocking the homepage, and confirm `/` returns `200` for standard browsers and search-engine crawlers. |
+| AI Search Readiness / GEO | Warning | Confirmed | `llms.txt` and `llms-full.txt` are not publicly reachable in the live environment. | `llms_txt_checker.py` reported `exists: false`, `full_exists: false`, with `status: 403` and `full_status: 403`; direct requests to both files also returned `403`. | Serve both files as public static assets and confirm they return `200` from the live domain. |
+| Crawl Signals | Warning | Confirmed | The live `robots.txt` is Cloudflare-managed content-signal output and does not advertise a sitemap. | `robots_checker.py` returned a live robots file with `search=yes, ai-train=no` and flagged no `Sitemap` directive. | Add an explicit `Sitemap:` line and make sure the live robots policy matches the intended crawl and AI policy. |
+| On-Page SEO | Pass | Confirmed | The local repo has a strong metadata and heading setup. | `index.html` contains a focused title, meta description, canonical URL, Open Graph tags, Twitter tags, valid JSON-LD, and a single H1. | Keep this structure stable once deployment access is fixed. |
+| Internal Linking | Info | Confirmed | The homepage’s internal linking is intentionally flat and anchor-based. | Local parse found `9` internal links and `0` external links; all navigation is same-page anchors (`#about`, `#why`, `#calculator`, `#how-it-works`, `#faq`, `#testimonial`). | Fine for a one-page brochure site; add deeper internal links only if the site expands into indexed subpages. |
+| Backlink Profile | Info | Hypothesis | Public backlink data is not verifiable from this environment. | CommonCrawl queries timed out; the live site also blocked crawler-style fetches; Search Console data is not available in the workspace. | Use Google Search Console’s Links report to confirm referring domains, anchor text, and any cleanup needs. |
 
-**Evidence**
+## Prioritized Action Plan
 
-- `llms.txt` still lists `/#reverse-mortgage-definition` and `/#sources`.
-- Those anchors do not exist in `index.html` anymore.
+1. Fix the live access block first. Make sure the homepage and crawl files return `200` instead of `403`.
+2. Deploy `llms.txt` and `llms-full.txt` publicly and confirm they are reachable from the live domain.
+3. Update the live `robots.txt` policy to include the sitemap and align AI crawler instructions with the intended policy.
+4. Once access is stable, export backlink data from Google Search Console and review referring domains / anchor text.
+5. Keep the current on-page SEO structure intact while you fix the deployment layer.
 
-**Why it matters**
+## Unknowns and Follow-ups
 
-This creates a mismatch between the machine-readable guidance files and the actual page. AI crawlers and answer engines rely on consistency; stale anchors reduce trust and can make the site harder to summarize correctly.
-
-**Fix**
-
-- Update `llms.txt` so it only references anchors that actually exist.
-- Remove the stale `/#reverse-mortgage-definition` and `/#sources` entries, or reintroduce a lightweight visible section if you want those references to stay.
-- Keep `llms-full.txt` aligned with the current page structure at the same time.
-
-**Confidence:** High
-
-### 2) Medium: `sameAs` schema links are not clearly verified
-
-**Evidence**
-
-- The `FinancialService` and `Person` JSON-LD blocks include `sameAs` links to `rate.com`, `norcalreverse.com`, and NMLS-related pages.
-
-**Why it matters**
-
-`sameAs` is strongest when it points to clearly owned, stable, and consistent profiles. If any of these URLs are not actually controlled by the business or are not the canonical identity pages, they can weaken entity clarity instead of improving it.
-
-**Fix**
-
-- Keep only verified, owned profiles in `sameAs`.
-- Add official profiles only if they are real public identity pages for Mike Brouse or the business.
-- If you cannot verify ownership, remove the questionable entries rather than guessing.
-
-**Confidence:** Medium
-
-### 3) Low: Unused PNG asset still ships with the build
-
-**Evidence**
-
-- `hero_couple.png` is still present in the repo and is listed in `vercel.json` `includeFiles`.
-- The live page now uses `hero_couple.jpg`.
-
-**Why it matters**
-
-This is not a ranking problem by itself, but it adds deployment bloat and makes the repo noisier than it needs to be. For a lean site, unused assets should not ship.
-
-**Fix**
-
-- Delete `hero_couple.png` if nothing references it.
-- Remove the broad `*.png` include if you no longer need other PNG assets in deployment.
-
-**Confidence:** High
-
-### 4) Info: Internal linking is flat by design for a one-page site
-
-**Evidence**
-
-- The homepage contains 9 internal links total.
-- All internal links are anchor jumps within the same page: `/`, `#about`, `#why`, `#calculator`, `#how-it-works`, `#faq`, and `#testimonial`.
-- There are no crawlable internal subpages in the current build.
-
-**Why it matters**
-
-This is not a problem for a one-page brochure site, but it means the site does not distribute internal link equity across multiple indexed pages. If the site later expands into articles or service pages, the current architecture will need more internal linking depth.
-
-**Fix**
-
-- Keep the current anchor navigation for the one-page layout.
-- If you add new indexed pages later, link to them from the nav, hero, and supporting sections.
-
-**Confidence:** Confirmed
-
-### 5) Hypothesis: Backlink profile is not verifiable from public crawl signals alone
-
-**Evidence**
-
-- The live site returned `403` to the link-profile crawler.
-- CommonCrawl index queries for `mikebrouse.com` timed out.
-- Quick search-engine checks did not surface a clean parseable referring-domain result set in this environment.
-
-**Why it matters**
-
-Without Google Search Console or another backlink source, the real referring-domain profile cannot be confirmed. That means we cannot reliably judge backlink strength, anchor mix, or toxic-link risk from public crawl data here.
-
-**Fix**
-
-- Connect Google Search Console and export the Links report.
-- Review top linking sites, top linked pages, and anchor text.
-- If you want off-site authority, earn a small set of real citations from owned profiles, partners, and relevant local or finance directories.
-
-**Confidence:** Hypothesis
+- Whether the `403` is caused by a Cloudflare/WAF rule, a deployment misconfiguration, or IP-based blocking.
+- Whether Googlebot and Bingbot are actually allowed in production despite the generic fetch failures.
+- The true external backlink profile, because it cannot be confirmed without Search Console or a reliable backlink source.
 
 ## Secondary Notes
 
-- Title length is good.
-- Meta description length is good.
-- There is only one H1.
-- Image alt coverage is present for the visible image.
-- The homepage has 0 outbound external links, which keeps the page clean but gives it no citation/outbound context.
-- The main performance issue left is mostly repository/deployment cleanliness, not a broken SEO surface.
+- The local repo’s title, meta description, canonical, OG/Twitter metadata, JSON-LD, and FAQ structure are all in good shape.
+- The repo currently has no outbound external citation links on the homepage.
+- The deployment bundle in `vercel.json` includes `robots.txt` and `sitemap.xml`, but not `llms.txt` or `llms-full.txt`.
 
-## Summary
-
-The site is SEO-ready at a basic and mid-level standard. The biggest remaining issue is GEO consistency: the machine-readable guidance files point at anchors that were removed from the page. Fixing that, tightening `sameAs`, and trimming unused assets would make the site cleaner and more trustworthy without changing the design direction.
